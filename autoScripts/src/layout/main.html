@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="/css/elementui.css">
+    <style>
+    /* 危险操作对话框特殊样式 */
+    .danger-dialog .el-message-box__title {
+    color: #f56c6c;
+    }
+    .danger-dialog .el-button--primary {
+    background-color: #f56c6c;
+    border-color: #f56c6c;
+    }
+    /* 添加以下样式 */
+    .compact-input .el-input__inner {
+        width: 120px;               /* 新增：控制输入域宽度 */
+        min-width: 100px;            /* 防止过度缩小 */
+        padding: 0 4px;             /* 左右内边距4px */
+        font-size: 12px;            /* 缩小字体尺寸 */
+        height: 28px;         /* 减小高度 */
+        line-height: 28px;    /* 保持垂直居中 */
+    }
+
+    .compact-input .el-input-group__append {
+        width: 80px;                /* 固定附加区域宽度 */
+        padding: 0 4px;             /* 左右内边距4px */
+        font-size: 12px;            /* 同步缩小附加文字 */
+        background-color: #f5f7fa;
+        color: #909399;
+    }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-tag type="success">自动伴聊系统配置面板</el-tag>
+    <el-form style="margin-top: 10px" :rules="rules" ref="form" :model="form" label-width="80px" size="mini">
+        <el-form-item label="授权卡密" prop="cardNo">
+            <el-input v-model="form.cardNo" placeholder="请输入授权密钥"></el-input>
+        </el-form-item>
+        <!-- 在回复模式选择项下方添加 -->
+        <el-form-item label="自动回复" prop="autoReplyOption">
+            <el-checkbox-group v-model="form.autoReplyOption">
+                <el-checkbox label="normalReply">常规回复</el-checkbox>
+                <el-checkbox label="keywordsReply">关键词回复</el-checkbox>
+                <el-checkbox label="intimacyReply">亲密度回复</el-checkbox>
+                <el-checkbox label="aiReply">AI智能回复</el-checkbox>
+            </el-checkbox-group>
+            <div style="color: #909399; font-size: 12px; margin-top: 5px">
+                已选选项：{{ selectedAutoReply.join('，') }}
+            </div>
+        </el-form-item>
+
+        <el-form-item
+                label="亲密度达"
+                prop="intimacyThreshold"
+                v-if="form.autoReplyOption.includes('intimacyReply')">
+            <el-input
+                    v-model.number="form.intimacyThreshold"
+                    type="number"
+                    placeholder="请输入1-100之间的值"
+                    :min="1"
+                    :max="100">
+                    style="width: 130px; padding: 0 6px"  <!-- 添加内联样式 -->
+                    class="compact-input">
+                <template slot="append">°C后触发回复</template>
+            </el-input>
+        </el-form-item>
+
+        <!-- 在回复模式选择项下方添加 -->
+        <el-form-item label="操作选项" prop="filters">
+            <el-checkbox-group v-model="form.filters">
+                <el-checkbox label="privateMsg">私信</el-checkbox>
+                <el-checkbox label="greet">打招呼</el-checkbox>
+                <el-checkbox label="historyUser">过滤历史用户</el-checkbox>
+                <el-checkbox label="todayUser">过滤当天用户</el-checkbox>
+            </el-checkbox-group>
+            <el-form-item
+                    label="打招呼"
+                    prop="greetLimit"
+                    v-if="form.filters.includes('greet')">
+                <el-input
+                        v-model.number="form.greetLimit"
+                        type="number"
+                        placeholder="请输入打招呼次数（例：500）"
+                        :min="1"
+                        :max="2000">
+                    <template slot="append">次</template>
+                </el-input>
+            </el-form-item>
+
+            <el-form-item
+                    label="私信话术"
+                    prop="customMessage"
+                    v-if="form.filters.includes('privateMsg')">
+                <el-input
+                        v-model="form.customMessage"
+                        type="textarea"
+                        :rows="3"
+                        placeholder="请输入私信自定义话术（例：你好呀，看到你的动态觉得很有趣～）">
+                </el-input>
+            </el-form-item>
+            <div style="color: #909399; font-size: 12px; margin-top: 5px">
+                已选选项：{{ selectedFilters.join('，') }}
+            </div>
+            <el-button type="warning" @click="deleteUserGreetHistory">删除历史互动记录</el-button>
+        </el-form-item>
+
+        <el-form-item>
+            <el-alert
+                    title="提示"
+                    type="warning"
+                    :closable="false"
+                    description="输入卡密、勾选选项，修改配置后，请点击“保存配置”以生效！"
+                    show-icon
+                    style="margin-bottom: 15px;">
+            </el-alert>
+        </el-form-item>
+
+        <!-- 操作按钮 -->
+        <el-form-item size="large">
+            <el-button type="primary" @click="submitForm">保存配置</el-button>
+            <el-button type="success" @click="runScript">启动脚本</el-button>
+        </el-form-item>
+
+    </el-form>
+</div>
+</body>
+<!-- import Vue before Element -->
+<script src="/htmljs/vue2.7.16.js"></script>
+<!-- import JavaScript -->
+<script src="/htmljs/elementui2.15.14.js"></script>
+<script src="/htmljs/form-create.min.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                form: {
+                    cardNo: '',
+                    filters: [],
+                    autoReplyOption: [],
+                    customMessage: '',
+                    greetLimit: 9999,       // 新增字段
+                    intimacyThreshold: 60 // 新增字段
+                },
+
+                rules: {
+
+                    cardNo: [
+                        {required: true, message: '请输入卡密', trigger: 'blur'},
+                    ],
+                    customMessage: [
+                        {
+                            validator: (rule, value, callback) => {
+                                if (this.form.filters.includes('privateMsg') && !value) {
+                                    callback(new Error('开启私信必须填写话术'));
+                                } else {
+                                    callback();
+                                }
+                            },
+                            trigger: 'blur'
+                        }
+                    ],
+                    greetLimit: [
+                        {
+                            validator: (rule, value, callback) => {
+                                if (this.form.filters.includes('greet')) {
+                                    if (value === null || value === '') {
+                                        callback(new Error('必须填写打招呼次数限制'));
+                                    } else if (value < 1 || value > 99999) {
+                                        callback(new Error('次数范围1-99999'));
+                                    }
+                                }
+                                callback();
+                            },
+                            trigger: 'blur'
+                        }
+                    ],
+                    intimacyThreshold: [
+                        {
+                            validator: (rule, value, callback) => {
+                                if (this.form.autoReplyOption.includes('intimacyReply')) {
+                                    if (value === null || value === '') {
+                                        callback(new Error('必须填写亲密度阈值'));
+                                    } else if (value < 1 || value > 100) {
+                                        callback(new Error('阈值范围1-100'));
+                                    }
+                                }
+                                callback();
+                            },
+                            trigger: 'blur'
+                        }
+                    ]
+
+
+                }
+            }
+        },
+        computed: {
+            selectedAutoReply(){
+                return this.form.autoReplyOption.map(item => {
+                    const map = {
+                        normalReply: '常规回复',
+                        keywordsReply: '关键词回复',
+                        intimacyReply:'亲密度回复',
+                        aiReply: 'AI智能回复',
+
+                    }
+                    return map[item] || item;
+                });
+
+            },
+            selectedFilters() {
+                return this.form.filters.map(item => {
+                    const map = {
+                        privateMsg: '私信',
+                        greet: '打招呼',
+                        historyUser: '过滤历史用户',
+                        todayUser: '过滤当天用户'
+                    }
+                    return map[item] || item;
+                });
+            },
+
+            showAlert() {
+                return !this.form.cardNo;
+            },
+            // 当前模式描述显示
+
+        },
+        created() {
+            this.resetValue()
+        },
+        methods: {
+            resetValue() {
+                let cardNo =  window.ec.getConfig("cardNo");
+                this.form.cardNo = cardNo
+                    // 加载自动回复选项
+                this.form.autoReplyOption = [];
+                const replyOptions = ['normalReply', 'keywordsReply', 'intimacyReply', 'aiReply'];
+                replyOptions.forEach(option => {
+                    if(window.ec.getConfig(option) === "true") {
+                        this.form.autoReplyOption.push(option);
+                    }
+                });
+
+                // 加载过滤条件
+                this.form.filters = [];
+                const filterOptions = ['privateMsg', 'greet', 'historyUser', 'todayUser'];
+                filterOptions.forEach(filter => {
+                    if(window.ec.getConfig(filter) === "true") {
+                        this.form.filters.push(filter);
+                    }
+                });
+
+                // 加载私信话术
+                //this.form.customMessage = window.ec.getConfig("customMessage") || '';
+                this.form.customMessage = JSON.parse(window.ec.getConfig("customMessage") || '""');
+                this.form.greetLimit = parseInt(window.ec.getConfig("greetLimit")) || 9999;
+                this.form.intimacyThreshold = parseInt(window.ec.getConfig("intimacyThreshold")) || 60;
+
+
+
+            },
+            save() {
+                try {
+                    // 获取当前所有配置
+                    const currentConfig = window.ec.getConfigJSON() || {};
+
+                    // 清理旧格式配置（通过覆盖方式）
+                    const resetKeys = [
+                        'autoReplyOption', 'filters',
+                        'normalReply', 'keywordsReply',
+                        'intimacyReply', 'aiReply','historyUser', 'privateMsg','todayUser','greet','greetLimit', 'intimacyThreshold'
+                    ];
+
+                    resetKeys.forEach(key => {
+                        window.ec.saveConfig(key, ""); // 置空旧配置项
+                    });
+                    // 保存时序列化
+                    window.ec.saveConfig("customMessage", JSON.stringify(this.form.customMessage));
+
+
+
+
+                    // 保存卡密（强制转换为字符串）
+                    //window.ec.saveConfig("cardNo", String(this.form.cardNo || ""));
+                    //保存卡密
+                    window.ec.saveConfig("cardNo",  this.form.cardNo);
+                    window.ec.saveConfig("greetLimit", this.form.greetLimit);
+                    window.ec.saveConfig("intimacyThreshold", this.form.intimacyThreshold);
+
+                    // 保存自动回复选项（新格式）
+                    this.form.autoReplyOption.forEach(option => {
+                        window.ec.saveConfig(option, "true");
+                    });
+
+                    // 保存过滤选项（新格式）
+                    this.form.filters.forEach(filter => {
+                        window.ec.saveConfig(filter, "true");
+                    });
+
+                    // 显式设置未选中项为false
+                    const allReplyOptions = ['normalReply', 'keywordsReply', 'intimacyReply', 'aiReply'];
+                    allReplyOptions.forEach(option => {
+                        if(!this.form.autoReplyOption.includes(option)) {
+                            window.ec.saveConfig(option, "false");
+                        }
+                    });
+
+                    this.$notify.success({
+                        title: '保存成功',
+                        message: '配置已更新',
+                        duration: 2000
+                    });
+
+                    //logd("最终配置：" + JSON.stringify(window.ec.getConfigJSON()));
+                } catch (e) {
+                    this.$notify.error({
+                        title: '保存失败',
+                        message: `错误信息：${e.message}`
+                    });
+                }},
+
+
+            submitForm() {
+
+                this.$refs.form.validate((valid) => {
+                    if (valid) {
+                        this.save();
+                    } else {
+                        this.$notify.error({
+                            title: '错误',
+                            message: '参数不完整，请正确填写所有必填项'
+                        });
+                        return false;
+                    }
+                });
+            },
+
+            runScript() {
+                if (!this.form.cardNo) {
+                    this.$message.warning('请先保存有效卡密配置');
+                    return;
+                }
+                window.ec.start()
+                this.$notify({
+                    title: '系统启动',
+                    type: 'success',
+                    message: '自动陪聊系统已开始运行'
+                });
+            },
+            // 新增删除记录方法
+            deleteUserGreetHistory() {
+                this.$confirm('此操作将永久删除所有用户记录, 是否继续?', '警告', {
+                    confirmButtonText: '确定删除',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                    center: true,
+                    customClass: 'danger-dialog'
+                }).then(() => {
+                    try {
+                        const tableName = "user_interaction";
+                        const result = sqlite.dropTable(tableName);
+
+                        if (result) {
+                            // 重建表结构（可选）
+                            this.initUserTable();
+
+                            this.$notify({
+                                title: '操作成功',
+                                type: 'success',
+                                message: '用户记录已清空，表结构已重置'
+                            });
+                        } else {
+                            throw new Error('数据库操作失败');
+                        }
+                    } catch (e) {
+                        this.$notify.error({
+                            title: '操作异常',
+                            message: `记录删除失败: ${e.message}`
+                        });
+                    }
+                }).catch(() => {});
+            },
+            // 表初始化方法（可选）
+            initUserTable() {
+
+            const createUserTable = `
+            CREATE TABLE IF NOT EXISTS user_interaction (
+                user_id TEXT PRIMARY KEY,
+                user_name TEXT,
+                greet_count INTEGER DEFAULT 0,
+                last_greet_time DATETIME,
+                message_count INTEGER DEFAULT 0,
+                last_message_time DATETIME,
+                interaction_status INTEGER DEFAULT 0
+            )`;
+            if (!sqlite.execSql(createUserTable)) {
+        throw new Error(`建表失败: ${sqlite.getErrorMsg()}`);
+    }
+
+
+
+
+        }
+    }})
+</script>
+</html>

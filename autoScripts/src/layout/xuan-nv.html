@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>玄女学堂 - 智能助手知识库</title>
+    <link rel="stylesheet" href="/css/elementui.css">
+    <style>
+        .step-content {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .step-image {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 10px auto;
+            display: block;
+        }
+
+        .media-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9比例 */
+            height: 0;
+            overflow: hidden;
+            background: #000;
+            border-radius: 8px;
+        }
+
+        .media-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .el-step__description {
+                padding: 0 10px;
+            }
+
+            .step-image {
+                max-width: 100%;
+            }
+        }
+        .mobile-menu {
+            display: none; /* 默认隐藏汉堡菜单 */
+        }
+
+        .knowledge-card {
+            margin: 10px;
+            width: calc(100% - 20px);
+        }
+
+        /* 响应式布局 */
+        @media screen and (max-width: 768px) {
+            .el-container {
+                flex-direction: column;
+            }
+
+            .el-aside {
+                width: 100% !important;
+                height: auto !important;
+                position: static;
+            }
+
+            .el-menu {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .el-menu-item {
+                width: 45%;
+                margin: 5px;
+                padding: 0 10px !important;
+            }
+
+            .el-menu-item span {
+                font-size: 14px;
+            }
+
+            .mobile-menu {
+                display: block;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1000;
+            }
+
+            .el-aside {
+                display: none;
+                position: fixed;
+                top: 50px;
+                left: 0;
+                background: white;
+                z-index: 999;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            }
+
+            .menu-visible {
+                display: block;
+            }
+        }
+
+        /* 通用样式 */
+        .content-container {
+            overflow-x: hidden;
+            padding: 15px;
+        }
+
+        .timeline-title {
+            color: #606266;
+            margin: 8px 0;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+<div id="academy">
+    <!-- 移动端汉堡菜单 -->
+    <el-button
+            class="mobile-menu"
+            icon="el-icon-menu"
+            @click="showMenu = !showMenu"
+            size="mini">
+    </el-button>
+
+    <el-container>
+        <!-- 侧边导航 -->
+        <el-aside :class="{'menu-visible': showMenu}">
+            <el-menu
+                    default-active="guide"
+                    @select="handleMenuSelect">
+                <el-menu-item index="guide">
+                    <i class="el-icon-notebook-2"></i>
+                    <span>使用指南</span>
+                </el-menu-item>
+                <el-menu-item index="api">
+                    <i class="el-icon-document"></i>
+                    <span>接口文档</span>
+                </el-menu-item>
+                <el-menu-item index="communication">
+                    <i class="el-icon-chat-line-round"></i>
+                    <span>沟通技巧</span>
+                </el-menu-item>
+                <el-menu-item index="changelog">
+                    <i class="el-icon-mobile"></i>
+                    <span>更新日志</span>
+                </el-menu-item>
+            </el-menu>
+        </el-aside>
+
+        <!-- 主内容区 -->
+        <el-main class="content-container">
+            <component :is="activeTab"></component>
+        </el-main>
+    </el-container>
+</div>
+
+<!-- 组件模板 -->
+<template id="guide">
+    <div>
+        <el-card class="knowledge-card">
+            <h2>🚀 快速入门指南</h2>
+
+            <!-- 视频教程 -->
+            <div class="media-container">
+                <video
+                        controls
+                        poster="https://vip.123pan.cn/1842474009/app/jiutianxuannv/pics/logo1.png"
+                        style="width:100%;border-radius:8px;margin:15px 0">
+                    <source src="https://vip.123pan.cn/1842474009/app/jiutianxuannv/pics/operationVideo.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放
+                </video>
+            </div>
+            <el-steps direction="vertical" :active="3" space="100px">
+                <!-- 步骤1 -->
+                <el-step title="配置授权卡密">
+                    <template slot="description">
+                        <div class="step-content">
+                            <p>1. 联系<strong>18682829413</strong>生成卡密</p>
+                            <img
+                                    src="https://vip.123pan.cn/1842474009/app/jiutianxuannv/pics/cardNo.png"
+                                    alt="授权配置示意图"
+                                    class="step-image">
+                            <p>2. 输入卡密后，记得点击“保存配置”</p>
+                        </div>
+                    </template>
+                </el-step>
+
+                <!-- 步骤2 -->
+                <el-step title="模式选择">
+                    <template slot="description">
+                        <div class="step-content">
+                            <el-alert type="info" style="margin:10px 0">
+                                <strong>功能完善优化中……</strong>
+                            </el-alert>
+                            <img
+                                    src="https://vip.123pan.cn/1842474009/app/jiutianxuannv/pics/parmSetting.png"
+                                    alt="模式选择界面"
+                                    class="step-image">
+                        </div>
+                    </template>
+                </el-step>
+
+                <!-- 步骤3 -->
+                <el-step title="系统启动">
+                    <template slot="description">
+                        <div class="step-content">
+                            <p>点击启动脚本按钮后，系统将开始自动化流程：</p>
+                            <el-button
+                                    type="success"
+                                    icon="el-icon-video-play"
+                                    style="margin-top:10px"
+                                    @click="showVideo = true">
+                                查看操作视频
+                            </el-button>
+                        </div>
+                    </template>
+                </el-step>
+            </el-steps>
+        </el-card>
+    </div>
+</template>
+
+<template id="changelog">
+    <div>
+        <el-card class="knowledge-card">
+            <h2>🆕 版本更新日志</h2>
+            <el-timeline>
+                <el-timeline-item
+                        timestamp="2025/4/6 11:08"
+                        placement="top"
+                        color="#409EFF">
+                    <h3 class="timeline-title">V1.0.2 增加自动打招呼、发私信功能</h3>
+                    <p>• UI界面更新，全功能入口展示</p>
+                    <p>• 实现自动打招呼</p>
+                    <p>• 实现自动打招呼后发私信</p>
+                    <p>• 实现发私信、打招呼功能可选</p>
+                </el-timeline-item>
+                <el-timeline-item
+                        timestamp="2025/4/6 0:45"
+                        placement="top"
+                        color="#409EFF">
+                    <h3 class="timeline-title">V1.0.1 Sqlite数据库访问调试成功</h3>
+                    <p>• 在与Deepseek互动N次，最终使用EasyClick官方文档实现数据库系统成功查询</p>
+                </el-timeline-item>
+                <el-timeline-item
+                        timestamp="2025/4/4 12:45"
+                        placement="top"
+                        color="#409EFF">
+                    <h3 class="timeline-title">V1.0.0 自研框架第一版打包</h3>
+                    <p>• 消息列表用户自动回复常规话术</p>
+                    <p>• 网络验证卡密（天、周、月、季度、年）</p>
+                    <p>• 识别唯一用户ID，实现互动状态全记录</p>
+                </el-timeline-item>
+                <el-timeline-item
+                        timestamp="2025/3/29"
+                        placement="top"
+                        color="#409EFF">
+                    <h3 class="timeline-title">V0.0.3 外援做出Test版本</h3>
+                    <p>• 外包实现打招呼、私信功能</p>
+                    <p>• 过滤历史用户未成功</p>
+                    <p>• 2025.3.30外援结束服务</p>
+                </el-timeline-item>
+                <el-timeline-item
+                        timestamp="2025/3/28"
+                        placement="top"
+                        color="#409EFF">
+                    <h3 class="timeline-title">V0.0.2 搜索实现路径</h3>
+                    <p>• 自动化软件，使用无障碍服务功能</p>
+                    <p>• 主流有AutoJs、Easyclick软件平台</p>
+                </el-timeline-item>
+                <el-timeline-item
+                        timestamp="2025/3/26"
+                        placement="top"
+                        color="#909399">
+                    <h3 class="timeline-title">V0.0.1提出功能需求</h3>
+                    <p>• 陪聊APP自动打招呼</p>
+                    <p>• 自动发私信</p>
+                    <p>• 接入话术库自动回复</p>
+                    <p>• 添加卡密</p>
+                </el-timeline-item>
+            </el-timeline>
+        </el-card>
+    </div>
+</template>
+
+</body>
+
+<script src="/htmljs/vue2.7.16.js"></script>
+<script src="/htmljs/elementui2.15.14.js"></script>
+<script>
+    new Vue({
+        el: '#academy',
+        data() {
+            return {
+                activeTab: 'guide',
+                showMenu: false,
+                showVideo: false
+            }
+        },
+        methods: {
+            handleMenuSelect(index) {
+                this.activeTab = index;
+                // 移动端选择后自动隐藏菜单
+                if (window.innerWidth <= 768) {
+                    this.showMenu = false;
+                }
+            }
+        },
+        components: {
+            guide: { template: '#guide' },
+            api: { template: '<div>接口文档内容...</div>' },
+            communication: { template: '<div>沟通技巧内容...</div>' },
+            changelog: { template: '#changelog' }
+        }
+    })
+</script>
+</html>

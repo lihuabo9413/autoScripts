@@ -1,0 +1,12 @@
+{
+	"script":[
+		{
+			"path":"D:\\app\\ecProjects\\九天玄女\\src\\js\\laoleng-free.js",
+			"name":"laoleng-free.js"
+		},
+		{
+			"path":"D:\\app\\ecProjects\\九天玄女\\src\\js\\laoleng.js",
+			"name":"laoleng.js"
+		}
+	]
+}
